@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruleta de Promociones</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 450px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      color: #f8fafc;
+    }
+
+    p.subtitle {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin-bottom: 25px;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      margin: 0 auto 25px auto;
+    }
+
+    /* Flecha / Indicador superior */
+    .pointer {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 25px solid #ef4444;
+      z-index: 10;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .spin-btn {
+      background: #22c55e;
+      color: #052e16;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    }
+
+    .spin-btn:hover:not(:disabled) {
+      background: #16a34a;
+      transform: translateY(-2px);
+    }
+
+    .spin-btn:disabled {
+      background: #475569;
+      color: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .limit-msg {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #f59e0b;
+    }
+
+    /* MODAL POPUP DE FELICITACIONES E IMAGEN */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: #1e293b;
+      border: 2px solid #38bdf8;
+      border-radius: 20px;
+      max-width: 420px;
+      width: 100%;
+      padding: 25px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 12px;
+      right: 15px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .close-modal:hover {
+      color: #fff;
+    }
+
+    .modal-title {
+      font-size: 1.6rem;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+
+    .modal-subtitle {
+      font-size: 1rem;
+      color: #e2e8f0;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    /* Imagen promocional completa */
+    .promo-img-container {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 1px solid #334155;
+      background: #0f172a;
+    }
+
+    .promo-img-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+
+    .ws-btn {
+      display: block;
+      width: 100%;
+      background-color: #25d366;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+      padding: 14px 20px;
+      border-radius: 50px;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .ws-btn:hover {
+      background-color: #1ebc57;
+      transform: translateY(-2px);
+    }
+
+    .view-prize-btn {
+      margin-top: 15px;
+      background: #334155;
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+    }
+
+    .view-prize-btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>¡Girá la Ruleta y Ganá!</h1>
+    <p class="subtitle">Tenés 1 intento por día para obtener tu descuento especial.</p>
+
+    <div class="wheel-wrapper">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="400" height="400"></canvas>
+    </div>
+
+    <button id="spinBtn" class="spin-btn">GIRAR RULETA</button>
+
+    <p id="limitMsg" class="limit-msg" style="display: none;">
+      Ya usaste tu tiro de hoy. Podés volver a girar mañana.
+    </p>
+
+    <button id="viewPrizeBtn" class="view-prize-btn">VER MI PREMIO DE HOY</button>
+  </div>
+
+  <!-- MODAL POPUP DE RESULTADO E IMAGEN -->
+  <div id="resultModal" class="modal-overlay">
+    <div class="modal-content">
+      <button id="closeModal" class="close-modal">&times;</button>
+      <h2 id="modalTitle" class="modal-title">¡FELICITACIONES!</h2>
+      <p id="modalText" class="modal-subtitle">Ganaste una promoción especial</p>
+
+      <!-- Imagen completa cargada según la opción -->
+      <div class="promo-img-container">
+        <img id="promoImg" src="" alt="Imagen Promocional">
+      </div>
+
+      <a id="wsLink" href="#" target="_blank" class="ws-btn">RECLAMAR POR WHATSAPP</a>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURACIÓN DE NÚMERO Y PREMIOS CON IMÁGENES ---
+    const PHONE_NUMBER = "5491126131910"; // Número actualizado
+
+    const OPTIONS = [
+      { label: "10% OFF", color: "#3b82f6", image: "promo_10off.jpg" },
+      { label: "15% OFF", color: "#8b5cf6", image: "promo_15off.jpg" },
+      { label: "Envío Gratis", color: "#ec4899", image: "promo_envio.jpg" },
+      { label: "5% OFF", color: "#f59e0b", image: "promo_5off.jpg" },
+      { label: "2x1 Promo", color: "#10b981", image: "promo_2x1.jpg" },
+      { label: "Regalo Surprise", color: "#6366f1", image: "promo_regalo.jpg" }
+    ];
+
+    // --- ELEMENTOS DEL DOM ---
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spinBtn");
+    const limitMsg = document.getElementById("limitMsg");
+    const viewPrizeBtn = document.getElementById("viewPrizeBtn");
+
+    const resultModal = document.getElementById("resultModal");
+    const closeModalBtn = document.getElementById("closeModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalText = document.getElementById("modalText");
+    const promoImg = document.getElementById("promoImg");
+    const wsLink = document.getElementById("wsLink");
+
+    const numOptions = OPTIONS.length;
+    const arcSize = (2 * Math.PI) / numOptions;
+    let currentAngle = 0;
+    let isSpinning = false;
+
+    // --- DIBUJAR RULETA ---
+    function drawWheel() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2 - 10;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < numOptions; i++) {
+        const angle = currentAngle + i * arcSize;
+
+        ctx.beginPath();
+        ctx.fillStyle = OPTIONS[i].color;
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+        ctx.lineTo(centerX, centerY);
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 18px sans-serif";
+        ctx.textAlign = "right";
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angle + arcSize / 2);
+        ctx.fillText(OPTIONS[i].label, radius - 20, 6);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+      ctx.fillStyle = "#0f172a";
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+    }
+
+    // --- MANEJO DE FECHAS (1 VEZ POR DÍA) ---
+    function getTodayString() {
+      const today = new Date();
+      return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+    }
+
+    function checkDailyLimit() {
+      const lastSpin = localStorage.getItem("ruleta_last_spin");
+      const today = getTodayString();
+
+      if (lastSpin === today) {
+        spinBtn.disabled = true;
+        spinBtn.textContent = "YA GIRASTE HOY";
+        limitMsg.style.display = "block";
+        viewPrizeBtn.style.display = "inline-block";
+
+        const savedPrizeIndex = localStorage.getItem("ruleta_prize_index");
+        if (savedPrizeIndex !== null) {
+          setupModal(parseInt(savedPrizeIndex), true);
+        }
+      }
+    }
+
+    // --- ANIMACIÓN DEL GIRO ---
+    function spin() {
+      if (isSpinning || spinBtn.disabled) return;
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+
+      const prizeIndex = Math.floor(Math.random() * numOptions);
+      const selectedOption = OPTIONS[prizeIndex];
+
+      const extraRounds = (Math.floor(Math.random() * 3) + 3) * 2 * Math.PI;
+      const targetAngle = extraRounds + (3 * Math.PI / 2) - (prizeIndex * arcSize) - (arcSize / 2);
+
+      const duration = 4000;
+      const start = performance.now();
+      const startAngle = currentAngle;
+
+      function animate(time) {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentAngle = startAngle + (targetAngle - startAngle) * easeOut;
+
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          isSpinning = false;
+          
+          // Guardar intento
+          localStorage.setItem("ruleta_last_spin", getTodayString());
+          localStorage.setItem("ruleta_prize_index", prizeIndex);
+
+          spinBtn.textContent = "YA GIRASTE HOY";
+          limitMsg.style.display = "block";
+          viewPrizeBtn.style.display = "inline-block";
+
+          setupModal(prizeIndex, false);
+          openModal();
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    // --- MANEJO DEL MODAL E IMAGEN ---
+    function setupModal(prizeIndex, isPrevious) {
+      const option = OPTIONS[prizeIndex];
+      const encodedMsg = encodeURIComponent(`¡Hola! Quiero la promo o descuento de: ${option.label}`);
+      const whatsappUrl = `https://wa.me/${PHONE_NUMBER}?text=${encodedMsg}`;
+
+      if (isPrevious) {
+        modalTitle.textContent = "TU PREMIO DE HOY";
+      } else {
+        modalTitle.textContent = "¡FELICITACIONES!";
+      }
+
+      modalText.textContent = `¡Ganaste: ${option.label}!`;
+      promoImg.src = option.image;
+      wsLink.href = whatsappUrl;
+    }
+
+    function openModal() {
+      resultModal.classList.add("active");
+    }
+
+    function closeModal() {
+      resultModal.classList.remove("active");
+    }
+
+    // --- EVENTOS ---
+    drawWheel();
+    checkDailyLimit();
+    spinBtn.addEventListener("click", spin);
+    closeModalBtn.addEventListener("click", closeModal);
+    viewPrizeBtn.addEventListener("click", openModal);
+
+    resultModal.addEventListener("click", (e) => {
+      if (e.target === resultModal) closeModal();
+    });
+  </script>
+</body>
+</html>
