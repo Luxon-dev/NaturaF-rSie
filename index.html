@@ -17,7 +17,6 @@
 
     body {
       background: #1a0f0a;
-      /* Fondo cálido orgánico con gradiente inspirado en Natura */
       background-image: 
         radial-gradient(at 50% 0%, rgba(249, 115, 22, 0.2) 0px, transparent 60%),
         radial-gradient(at 100% 100%, rgba(34, 197, 94, 0.12) 0px, transparent 50%),
@@ -66,12 +65,11 @@
     p.subtitle {
       font-size: 0.95rem;
       color: #fdba74;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       line-height: 1.4;
       opacity: 0.9;
     }
 
-    /* BANNER CANAL WHATSAPP NATURA */
     .channel-card {
       background: rgba(43, 22, 15, 0.85);
       border: 1px solid rgba(249, 115, 22, 0.3);
@@ -134,7 +132,6 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
-    /* Indicador / Flecha con tono Naranja Natura */
     .pointer {
       position: absolute;
       top: -10px;
@@ -358,7 +355,7 @@
     <h1>Ruleta de Promociones</h1>
     <p class="subtitle">Girá la ruleta y descubrí tu descuento exclusivo del día.</p>
 
-    <!-- INVITACIÓN AL CANAL DE WHATSAPP NATURA -->
+    <!-- CANAL WHATSAPP -->
     <div class="channel-card">
       <div class="channel-info">
         <div class="channel-title">📲 Canal de Natura</div>
@@ -386,7 +383,7 @@
     <button id="viewPrizeBtn" class="view-prize-btn">VER MI PREMIO DE HOY</button>
   </div>
 
-  <!-- MODAL POPUP DE RESULTADO E IMAGEN -->
+  <!-- MODAL POPUP (AQUÍ SE REVELA EL PREMIO) -->
   <div id="resultModal" class="modal-overlay">
     <div class="modal-content">
       <button id="closeModal" class="close-modal">&times;</button>
@@ -403,7 +400,7 @@
       </a>
 
       <a href="https://whatsapp.com/channel/0029VbDoDy347Xe5bdCx3q3P" target="_blank" class="modal-channel-link">
-        👉 ¡Suma más chances siguiendo el canal oficial!
+        👉 ¡Seguí el canal oficial para ver más promos!
       </a>
     </div>
   </div>
@@ -411,14 +408,13 @@
   <script>
     const PHONE_NUMBER = "5491126131910";
 
-    // Colores cálidos y elegantes acordes a Natura
     const OPTIONS = [
-      { label: "10% OFF", color: "#2b160f", textCol: "#fb923c", image: "promo_10off.jpg" },
-      { label: "30% OFF", color: "#14281d", textCol: "#4ade80", image: "promo_30off.jpg" },
-      { label: "40% OFF", color: "#431407", textCol: "#f97316", image: "promo_40off.jpg" },
-      { label: "30% OFF", color: "#361a0c", textCol: "#fde047", image: "promo1_30off.jpg" },
-      { label: "30% OFF", color: "#1a2e22", textCol: "#34d399", image: "promo2_30off.jpg" },
-      { label: "30% OFF", color: "#3f1d18", textCol: "#fca5a5", image: "promo3_30off.jpg" }
+      { label: "10% OFF", color: "#2b160f", image: "promo_10off.jpg" },
+      { label: "30% OFF", color: "#14281d", image: "promo_30off.jpg" },
+      { label: "40% OFF", color: "#431407", image: "promo_40off.jpg" },
+      { label: "30% OFF", color: "#361a0c", image: "promo1_30off.jpg" },
+      { label: "30% OFF", color: "#1a2e22", image: "promo2_30off.jpg" },
+      { label: "30% OFF", color: "#3f1d18", image: "promo3_30off.jpg" }
     ];
 
     const canvas = document.getElementById("wheel");
@@ -439,7 +435,7 @@
     let currentAngle = 0;
     let isSpinning = false;
 
-    // Pre-carga de imágenes para los sectores de la ruleta
+    // Precarga de imágenes
     const loadedImages = {};
 
     OPTIONS.forEach((opt, index) => {
@@ -454,6 +450,7 @@
       };
     });
 
+    // DIBUJAR RULETA CON IMÁGENES RECTANGULARES/COMPLETAS DE FONDO (SIN TEXTO)
     function drawWheel() {
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
@@ -464,59 +461,57 @@
       for (let i = 0; i < numOptions; i++) {
         const angle = currentAngle + i * arcSize;
 
-        // Dibujar Sector
+        ctx.save();
+        
+        // 1. Recortar el lienzo al triángulo exacto de la sección (gajo)
         ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
+        ctx.closePath();
+        ctx.clip();
+
+        // Color base de respaldo
         ctx.fillStyle = OPTIONS[i].color;
+        ctx.fill();
+
+        // 2. Dibujar la imagen abarcando todo el gajo
+        if (loadedImages[i]) {
+          ctx.translate(centerX, centerY);
+          ctx.rotate(angle + arcSize / 2);
+
+          const drawWidth = radius * 1.5;
+          const drawHeight = radius * 1.5;
+
+          // Centramos la imagen para que cubra la totalidad del sector
+          ctx.drawImage(
+            loadedImages[i],
+            0,
+            -drawHeight / 2,
+            drawWidth,
+            drawHeight
+          );
+        }
+
+        ctx.restore();
+
+        // Linea divisoria entre gajos
+        ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
         ctx.lineTo(centerX, centerY);
-        ctx.fill();
-
-        ctx.strokeStyle = "rgba(249, 115, 22, 0.15)";
+        ctx.strokeStyle = "rgba(249, 115, 22, 0.4)";
         ctx.lineWidth = 2;
         ctx.stroke();
-
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(angle + arcSize / 2);
-
-        // Dibujar imagen circular del producto dentro del gajo
-        if (loadedImages[i]) {
-          ctx.save();
-          const imgSize = 54;
-          const imgX = radius * 0.52 - imgSize / 2;
-          const imgY = -imgSize / 2;
-
-          ctx.beginPath();
-          ctx.arc(imgX + imgSize/2, imgY + imgSize/2, imgSize/2, 0, Math.PI * 2);
-          ctx.clip();
-          
-          ctx.drawImage(loadedImages[i], imgX, imgY, imgSize, imgSize);
-          
-          ctx.strokeStyle = "rgba(251, 146, 60, 0.5)";
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // Texto
-        ctx.fillStyle = OPTIONS[i].textCol;
-        ctx.font = "bold 16px 'Plus Jakarta Sans', sans-serif";
-        ctx.textAlign = "right";
-        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(OPTIONS[i].label, radius - 18, 6);
-        ctx.restore();
       }
 
       // Anillo Exterior
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
       ctx.lineWidth = 8;
-      ctx.strokeStyle = "rgba(249, 115, 22, 0.25)";
+      ctx.strokeStyle = "rgba(249, 115, 22, 0.3)";
       ctx.stroke();
 
-      // Centro Natura
+      // Botón Central
       ctx.beginPath();
       ctx.arc(centerX, centerY, 34, 0, 2 * Math.PI);
       ctx.fillStyle = "#1a0f0a";
