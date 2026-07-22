@@ -531,7 +531,7 @@
       return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
     }
 
-   // function  checkDailyLimit() {
+    function  checkDailyLimit() {
       const lastSpin = localStorage.getItem("ruleta_last_spin");
       const today = getTodayString();
 
@@ -616,7 +616,7 @@
     }
 
     drawWheel();
-    checkDailyLimit();
+    //checkDailyLimit();
     spinBtn.addEventListener("click", spin);
     closeModalBtn.addEventListener("click", closeModal);
     viewPrizeBtn.addEventListener("click", openModal);
